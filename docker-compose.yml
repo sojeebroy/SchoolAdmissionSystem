@@ -1,0 +1,7 @@
+include:
+  - ./SchoolAdmissionSystem.API/docker-compose.yml
+  - ./schooladmissionsystem.frontend/docker-compose.yml
+ 
+networks:
+  school-network:
+    driver: bridge
