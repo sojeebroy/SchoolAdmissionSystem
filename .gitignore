@@ -1,0 +1,38 @@
+# .NET / Visual Studio
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build outputs
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa]rtifacts/
+
+# Local secrets
+.env
+.env.*
+!.env.example
+appsettings.json 
+appsettings.Development.json
+appsettings.Production.json
+
+Planning.md
+
+# Packages
+packages/
+*.nupkg
+
+# Logs
+*.log
+
+# Rider / VS Code
+.idea/
+.vscode/
+
+.dockerignore

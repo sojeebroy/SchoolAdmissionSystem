@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="SchoolAdmissionSystem.API/SchoolAdmissionSystem.API.csproj" />
+  <Project Path="SchoolAdmissionSystem.Frontend/schooladmissionsystem.frontend.esproj">
+    <Build />
+    <Deploy />
+  </Project>
+</Solution>
