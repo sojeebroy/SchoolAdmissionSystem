@@ -14,7 +14,8 @@ export const MyApplications = () => {
     try {
       setLoading(true);
       const response = await holdApi.getStudentHolds();
-      setHolds(response.data.data || []);
+      const holdsData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
+      setHolds(holdsData);
     } catch (err) {
       setError(err.message || 'Failed to load applications');
     } finally {
@@ -155,7 +156,7 @@ const HoldCard = ({ hold, onCancel, onConfirm }) => {
               onMouseEnter={(e) => e.target.style.backgroundColor = '#059669'}
               onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--success)'}
             >
-              Confirm Admission
+              Payment
             </button>
           )}
           {canCancel && (

@@ -7,7 +7,7 @@ export const Footer = () => {
             School Admission System v1.0
           </p>
           <p style={styles.text}>
-            All rights reserved © 2024
+            All rights reserved © 2026
           </p>
         </div>
       </div>

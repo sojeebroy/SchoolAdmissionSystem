@@ -1,7 +1,12 @@
 import { useAuthStore } from "../stores/authStore";
 
-export const Header = () => {
+export const Header = ({ currentPage, onNavigate }) => {
   const { studentId, clearStudentId } = useAuthStore();
+
+  const handleLogout = () => {
+    clearStudentId();
+    onNavigate?.('hero');
+  };
 
   return (
     <header style={styles.header}>
@@ -11,9 +16,42 @@ export const Header = () => {
           <div style={styles.headerRight}>
             {studentId && (
               <>
+                <nav style={styles.nav}>
+                  <button
+                    onClick={() => onNavigate?.('classes')}
+                    style={{
+                      ...styles.navBtn,
+                      backgroundColor: currentPage === 'classes' ? 'var(--accent)' : 'transparent',
+                      color: currentPage === 'classes' ? '#ffffff' : 'var(--text)',
+                    }}
+                  >
+                    Available Classes
+                  </button>
+                  <button
+                    onClick={() => onNavigate?.('applications')}
+                    style={{
+                      ...styles.navBtn,
+                      backgroundColor: currentPage === 'applications' ? 'var(--accent)' : 'transparent',
+                      color: currentPage === 'applications' ? '#ffffff' : 'var(--text)',
+                    }}
+                  >
+                    My Applications
+                  </button>
+                  <button
+                    onClick={() => onNavigate?.('admin')}
+                    style={{
+                      ...styles.navBtn,
+                      ...styles.adminBtn,
+                      backgroundColor: currentPage === 'admin' ? '#7c3aed' : 'transparent',
+                      color: currentPage === 'admin' ? '#ffffff' : 'var(--text)',
+                    }}
+                  >
+                    ⚙ Admin
+                  </button>
+                </nav>
                 <span style={styles.studentId}>{studentId}</span>
                 <button 
-                  onClick={clearStudentId}
+                  onClick={handleLogout}
                   style={styles.logoutBtn}
                 >
                   Logout
@@ -57,6 +95,22 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '16px',
+  },
+  nav: {
+    display: 'flex',
+    gap: '8px',
+  },
+  navBtn: {
+    fontSize: '14px',
+    padding: '8px 16px',
+    border: '1px solid var(--border)',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    fontWeight: '500',
+  },
+  adminBtn: {
+    borderColor: '#7c3aed',
   },
   studentId: {
     fontSize: '14px',

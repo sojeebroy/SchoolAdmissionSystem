@@ -1,17 +1,20 @@
 import { useState, useEffect } from 'react';
-import { classApi } from '../api/endpoints';
+import { classApi, holdApi } from '../api/endpoints';
+import { useAuthStore } from '../stores/authStore';
 
 export const ClassList = () => {
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { studentId } = useAuthStore();
 
   useEffect(() => {
     const fetchClasses = async () => {
       try {
         setLoading(true);
         const response = await classApi.getAll();
-        setClasses(response.data.data || []);
+        const classesData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
+        setClasses(classesData);
       } catch (err) {
         setError(err.message || 'Failed to load classes');
       } finally {
@@ -46,13 +49,30 @@ export const ClassList = () => {
     );
   }
 
+  const handleApply = async (classId) => {
+    try {
+      await holdApi.create(classId);
+      alert('Application submitted successfully! Check My Applications for details.');
+    } catch (err) {
+      if (err.response?.status === 409) {
+        alert('You already have an active application for this class');
+      } else {
+        alert(err.response?.data?.message || err.message || 'Failed to submit application');
+      }
+    }
+  };
+
   return (
     <section style={styles.section}>
       <div style={styles.container}>
         <h2 style={styles.sectionTitle}>Available Classes</h2>
         <div style={styles.grid}>
           {classes.map((cls) => (
-            <ClassCard key={cls.id} classItem={cls} />
+            <ClassCard 
+              key={cls.id} 
+              classItem={cls}
+              onApply={handleApply}
+            />
           ))}
         </div>
       </div>
@@ -60,7 +80,7 @@ export const ClassList = () => {
   );
 };
 
-const ClassCard = ({ classItem }) => {
+const ClassCard = ({ classItem, onApply }) => {
   const availablePercentage = (classItem.availableSeats / classItem.totalSeats) * 100;
   const isAvailable = classItem.availableSeats > 0;
 
@@ -107,6 +127,7 @@ const ClassCard = ({ classItem }) => {
       </div>
 
       <button 
+        onClick={() => isAvailable && onApply(classItem.id)}
         style={{
           ...styles.applyBtn,
           opacity: isAvailable ? 1 : 0.5,

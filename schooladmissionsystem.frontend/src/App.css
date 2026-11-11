@@ -38,7 +38,7 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text);
-}}
+}
 
 #spacer {
   height: 88px;

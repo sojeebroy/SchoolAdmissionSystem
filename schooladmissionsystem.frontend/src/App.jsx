@@ -5,6 +5,7 @@ import { HeroSection } from './components/HeroSection';
 import { StudentIdForm } from './components/StudentIdForm';
 import { ClassList } from './components/ClassList';
 import { MyApplications } from './components/MyApplications';
+import { AdminPanel } from './components/AdminPanel';
 import { Footer } from './components/Footer';
 import './App.css';
 
@@ -18,7 +19,7 @@ function App() {
 
   return (
     <div style={styles.app}>
-      <Header />
+      <Header currentPage={currentPage} onNavigate={setCurrentPage} />
 
       {!studentId ? (
         <StudentIdForm onSubmit={() => setCurrentPage('classes')} />
@@ -32,6 +33,9 @@ function App() {
           )}
           {currentPage === 'applications' && (
             <MyApplications />
+          )}
+          {currentPage === 'admin' && (
+            <AdminPanel />
           )}
         </>
       )}

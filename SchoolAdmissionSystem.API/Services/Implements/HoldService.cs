@@ -23,63 +23,52 @@ namespace SchoolAdmissionSystem.API.Services.Implements
         {
             _logger.LogInformation("Creating hold for Student: {StudentId}, Class: {ClassId}", studentId, classId);
 
-            using (var transaction = await _context.Database.BeginTransactionAsync())
+            var strategy = _context.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
             {
-                try
+                var classEntity = await _context.Classes.FirstOrDefaultAsync(c => c.Id == classId);
+
+                if (classEntity == null)
                 {
-                    var classEntity = await _context.Classes
-                        .FromSqlRaw("SELECT * FROM \"Classes\" WHERE \"Id\" = {0} FOR UPDATE", classId)
-                        .FirstOrDefaultAsync();
-
-                    if (classEntity == null)
-                    {
-                        throw new KeyNotFoundException($"Class with ID {classId} not found");
-                    }
-
-                    var confirmedCount = await _context.Holds
-                        .CountAsync(h => h.ClassId == classId && h.Status == HoldStatus.Confirmed);
-
-                    if (confirmedCount >= classEntity.TotalSeats)
-                    {
-                        throw new InvalidOperationException("No seats available");
-                    }
-
-                    var existingHold = await _context.Holds
-                        .FirstOrDefaultAsync(h => h.ClassId == classId &&
-                                               h.StudentId == studentId &&
-                                               h.Status == HoldStatus.Held);
-
-                    if (existingHold != null)
-                    {
-                        throw new InvalidOperationException("Student already has a held hold for this class");
-                    }
-
-                    var holdDuration = int.Parse(_config["HOLD_DURATION_SECONDS"] ?? "600");
-                    var hold = new Hold
-                    {
-                        Id = $"h_{Guid.NewGuid().ToString("N")[..8]}",
-                        ClassId = classId,
-                        StudentId = studentId,
-                        Status = HoldStatus.Held,  
-                        CreatedAt = DateTime.UtcNow,
-                        ExpiresAt = DateTime.UtcNow.AddSeconds(holdDuration),
-                        UpdatedAt = DateTime.UtcNow
-                    };
-
-                    _context.Holds.Add(hold);
-                    await _context.SaveChangesAsync();
-                    await transaction.CommitAsync();
-
-                    _logger.LogInformation("Hold created successfully: {HoldId}", hold.Id);
-                    return MapToDto(hold);
+                    throw new KeyNotFoundException($"Class with ID {classId} not found");
                 }
-                catch (Exception ex)
+
+                var confirmedCount = await _context.Holds
+                    .CountAsync(h => h.ClassId == classId && h.Status == HoldStatus.Confirmed);
+
+                if (confirmedCount >= classEntity.TotalSeats)
                 {
-                    await transaction.RollbackAsync();
-                    _logger.LogError(ex, "Error creating hold for Student: {StudentId}", studentId);
-                    throw;
+                    throw new InvalidOperationException("No seats available");
                 }
-            }
+
+                var existingHold = await _context.Holds
+                    .FirstOrDefaultAsync(h => h.ClassId == classId &&
+                                           h.StudentId == studentId &&
+                                           h.Status == HoldStatus.Held);
+
+                if (existingHold != null)
+                {
+                    throw new InvalidOperationException("Student already has a held hold for this class");
+                }
+
+                var holdDuration = int.Parse(_config["HOLD_DURATION_SECONDS"] ?? "600");
+                var hold = new Hold
+                {
+                    Id = $"h_{Guid.NewGuid().ToString("N")[..8]}",
+                    ClassId = classId,
+                    StudentId = studentId,
+                    Status = HoldStatus.Held,  
+                    CreatedAt = DateTime.UtcNow,
+                    ExpiresAt = DateTime.UtcNow.AddSeconds(holdDuration),
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                _context.Holds.Add(hold);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Hold created successfully: {HoldId}", hold.Id);
+                return MapToDto(hold);
+            });
         }
 
         public async Task<HoldResponseDto> GetHoldByIdAsync(string holdId)
@@ -111,49 +100,40 @@ namespace SchoolAdmissionSystem.API.Services.Implements
         {
             _logger.LogInformation("Confirming hold: {HoldId}, Student: {StudentId}", holdId, studentId);
 
-            using (var transaction = await _context.Database.BeginTransactionAsync())
+            var strategy = _context.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
             {
-                try
+                var hold = await _context.Holds.FirstOrDefaultAsync(h => h.Id == holdId);
+
+                if (hold == null)
                 {
-                    var hold = await _context.Holds.FirstOrDefaultAsync(h => h.Id == holdId);
-
-                    if (hold == null)
-                    {
-                        throw new KeyNotFoundException($"Hold with ID {holdId} not found");
-                    }
-
-                    if (hold.StudentId != studentId)
-                    {
-                        throw new UnauthorizedAccessException("You do not have permission to confirm this hold");
-                    }
-
-                    if (hold.Status != HoldStatus.Held)
-                    {
-                        throw new InvalidOperationException($"Hold is already {hold.Status}");
-                    }
-
-                    if (hold.IsExpired)
-                    {
-                        throw new InvalidOperationException("Hold has expired");
-                    }
-
-                    hold.Status = HoldStatus.Confirmed;
-                    hold.UpdatedAt = DateTime.UtcNow;  
-
-                    _context.Holds.Update(hold);
-                    await _context.SaveChangesAsync();
-                    await transaction.CommitAsync();
-
-                    _logger.LogInformation("Hold confirmed successfully: {HoldId}", holdId);
-                    return MapToDto(hold);
+                    throw new KeyNotFoundException($"Hold with ID {holdId} not found");
                 }
-                catch (Exception ex)
+
+                if (hold.StudentId != studentId)
                 {
-                    await transaction.RollbackAsync();
-                    _logger.LogError(ex, "Error confirming hold: {HoldId}", holdId);
-                    throw;
+                    throw new UnauthorizedAccessException("You do not have permission to confirm this hold");
                 }
-            }
+
+                if (hold.Status != HoldStatus.Held)
+                {
+                    throw new InvalidOperationException($"Hold is already {hold.Status}");
+                }
+
+                if (hold.IsExpired)
+                {
+                    throw new InvalidOperationException("Hold has expired");
+                }
+
+                hold.Status = HoldStatus.Confirmed;
+                hold.UpdatedAt = DateTime.UtcNow;  
+
+                _context.Holds.Update(hold);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Hold confirmed successfully: {HoldId}", holdId);
+                return MapToDto(hold);
+            });
         }
 
         public async Task<bool> CancelHoldAsync(string holdId, string studentId)
