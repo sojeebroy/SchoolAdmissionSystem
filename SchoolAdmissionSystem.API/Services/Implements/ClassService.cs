@@ -25,6 +25,7 @@ namespace SchoolAdmissionSystem.API.Services.Implements
             {
                 Id = $"c_{Guid.NewGuid().ToString("N")[..8]}",
                 Name = dto.Name,
+                Section = dto.Section,
                 TotalSeats = dto.TotalSeats,
                 CreatedAt = DateTime.UtcNow
             };
@@ -77,6 +78,7 @@ namespace SchoolAdmissionSystem.API.Services.Implements
             }
 
             classEntity.Name = dto.Name;
+            classEntity.Section = dto.Section;
             classEntity.TotalSeats = dto.TotalSeats;
 
             _context.Classes.Update(classEntity);
@@ -109,12 +111,14 @@ namespace SchoolAdmissionSystem.API.Services.Implements
         private ClassResponseDto MapToDto(Class classEntity)
         {
             var confirmedHolds = classEntity.Holds?.Count(h => h.Status == HoldStatus.Confirmed) ?? 0;
-            var availableSeats = classEntity.TotalSeats - confirmedHolds;
+            var heldHolds = classEntity.Holds?.Count(h => h.Status == HoldStatus.Held) ?? 0;
+            var availableSeats = classEntity.TotalSeats - confirmedHolds - heldHolds;
 
             return new ClassResponseDto
             {
                 Id = classEntity.Id,
                 Name = classEntity.Name,
+                Section = classEntity.Section,
                 TotalSeats = classEntity.TotalSeats,
                 ConfirmedSeats = confirmedHolds,
                 AvailableSeats = availableSeats,

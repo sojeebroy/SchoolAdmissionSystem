@@ -38,6 +38,10 @@ namespace SchoolAdmissionSystem.API.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<string>("Section")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<int>("TotalSeats")
                         .HasColumnType("integer");
 
