@@ -1,68 +1,7 @@
-services:
-  # schooladmissionsystem-frontend:
-  #   build:
-  #     context: ./schooladmissionsystem.frontend
-  #     dockerfile: Dockerfile.dev
-  #   container_name: school-admission-frontend-dev
-  #   ports:
-  #     - "3000:5173"
-  #   volumes:
-  #     - ./schooladmissionsystem.frontend/src:/app/src
-  #     - ./schooladmissionsystem.frontend/public:/app/public
-  #   depends_on:
-  #     - schooladmissionsystem-api
-  #   networks:
-  #     - school-network
-  #   restart: unless-stopped
-
-  # Backend API - Development
-  schooladmissionsystem-api:
-    build:
-      context: .
-      dockerfile: SchoolAdmissionSystem.API/Dockerfile
-    container_name: school-admission-api-dev
-    ports:
-      - "5000:8080"
-      - "5001:8081"
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=SchoolAdmissionSystem;Username=postgres;Password=SQL0852;
-    volumes:
-      - ./SchoolAdmissionSystem.API:/app/SchoolAdmissionSystem.API
-      - ./SchoolAdmissionSystem.Domain:/app/SchoolAdmissionSystem.Domain
-      - ./SchoolAdmissionSystem.Infrastructure:/app/SchoolAdmissionSystem.Infrastructure
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - school-network
-    restart: unless-stopped
-
-  # PostgreSQL Database - Development
-  postgres:
-    image: postgres:16-alpine
-    container_name: school-admission-db-dev
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: SQL0852
-      POSTGRES_DB: SchoolAdmissionSystem
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data_dev:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - school-network
-    restart: unless-stopped
-
+include:
+  - ./SchoolAdmissionSystem.API/docker-compose.yml
+  - ./schooladmissionsystem.frontend/docker-compose.yml
+ 
 networks:
   school-network:
     driver: bridge
-
-volumes:
-  postgres_data_dev:

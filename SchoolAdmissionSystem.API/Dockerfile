@@ -10,19 +10,16 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy project file
-COPY ["SchoolAdmissionSystem.API/SchoolAdmissionSystem.API.csproj", "./SchoolAdmissionSystem.API/"]
-COPY ["SchoolAdmissionSystem.Domain/SchoolAdmissionSystem.Domain.csproj", "./SchoolAdmissionSystem.Domain/"]
-COPY ["SchoolAdmissionSystem.Infrastructure/SchoolAdmissionSystem.Infrastructure.csproj", "./SchoolAdmissionSystem.Infrastructure/"]
+COPY ["SchoolAdmissionSystem.API.csproj", "."]
 
 # Restore dependencies
-RUN dotnet restore "./SchoolAdmissionSystem.API/SchoolAdmissionSystem.API.csproj"
+RUN dotnet restore "SchoolAdmissionSystem.API.csproj"
 
 # Copy all source code
 COPY . .
 
 # Expose ports
-EXPOSE 8080 8081 5555
+EXPOSE 8080
 
 # Watch mode for hot reload
-WORKDIR /app/SchoolAdmissionSystem.API
 CMD ["dotnet", "watch", "run", "--urls", "http://+:8080"]
